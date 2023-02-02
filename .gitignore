@@ -1,3 +1,2 @@
 .env
-build/main.js
-build/service.js
+build
