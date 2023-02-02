@@ -13,8 +13,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
+const service_1 = require("./service");
 const dotenv_1 = __importDefault(require("dotenv"));
-const axios_1 = __importDefault(require("axios"));
 dotenv_1.default.config();
 const client = new discord_js_1.Client({
     intents: [
@@ -34,7 +34,7 @@ client.on('messageCreate', (message) => __awaiter(void 0, void 0, void 0, functi
     if (message.content.startsWith('/s')) {
         const trackName = message.content.split('').slice(2).join('');
         console.log(trackName);
-        searchTrack(trackName)
+        (0, service_1.searchTrack)(trackName)
             .then((result) => {
             console.log(result);
             // message.reply(result);
@@ -62,22 +62,5 @@ client.on('messageCreate', (message) => __awaiter(void 0, void 0, void 0, functi
 }));
 process.on('uncaughtException', (err) => {
     console.log(`${err.stack}`);
-});
-const searchTrack = (trackName) => __awaiter(void 0, void 0, void 0, function* () {
-    const responese = yield axios_1.default.get(`https://api.spotify.com/v1/search?q=${encodeURIComponent(trackName)}&type=track&limit=10`);
-    let trackArray = [];
-    for (let i = 0; i < responese.data.track.limit; i++) {
-        let artistsArray = [];
-        for (let j = 0; j < responese.data.track.items[i].artists.length; j++) {
-            artistsArray.push(responese.data.track.items[i].artists[j].name);
-        }
-        const trackData = {
-            name: responese.data.track.items[i].name,
-            artist: String(artistsArray),
-            url: responese.data.track.items[i].external_urls.spotify,
-        };
-        trackArray.push(trackData);
-    }
-    return trackArray;
 });
 client.login(process.env.TOKEN);
