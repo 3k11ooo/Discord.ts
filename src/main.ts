@@ -1,8 +1,10 @@
 import { Message, Client, GatewayIntentBits } from 'discord.js'
-import { searchTrack } from './service'
+import { searchTrack, oAuth } from './service'
 import dotenv from 'dotenv'
 
 dotenv.config()
+const id = process.env.CLIENT_ID!;
+const secret = process.env.CLIENT_SECRET!;
 
 const client = new Client({
     intents: [
@@ -14,24 +16,23 @@ const client = new Client({
 });
 
 client.once('ready', () => {
+  oAuth(id, secret);
   console.log('Ready!')
   console.log(client.user?.tag)
 });
 
 client.on('messageCreate', async message => {
-  console.log('内容 =>', message.content);
-
   if (message.content.startsWith('/s')) {
     const trackName = message.content.split('').slice(2).join('');
-    console.log(trackName);
     searchTrack(trackName)
     .then((result: any[]) => {
-      console.log(result);
-      // message.reply(result);
+      const resultString = result.join('\n\n');
+      message.reply(resultString);
     })
     .catch((err) => {
-      console.log(err.code);
-      console.log(err.config.url);
+      console.log(err);
+      // console.log(err.code);
+      // console.log(err.config.url);
       // message.reply('エラーです！私にはできません！');
     });
   }
