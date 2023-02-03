@@ -1,5 +1,5 @@
-import { Message, Client, GatewayIntentBits } from 'discord.js'
-import { searchTrack, oAuth } from './service'
+import { Message, Client, GatewayIntentBits, EmbedBuilder } from 'discord.js'
+import { searchTrack, oAuth } from './spotify-service'
 import dotenv from 'dotenv'
 
 dotenv.config()
@@ -11,47 +11,52 @@ const client = new Client({
       GatewayIntentBits.Guilds, 
       GatewayIntentBits.GuildMembers, 
       GatewayIntentBits.GuildMessages,
-      GatewayIntentBits.MessageContent
+      GatewayIntentBits.MessageContent,
     ],
 });
 
-client.once('ready', () => {
-  oAuth(id, secret);
-  console.log('Ready!')
-  console.log(client.user?.tag)
+client.once('ready', async () => {
+  const data = [{
+    name: 'search',
+    description: 'Search tracks from some words',
+  }];
+  await client.application?.commands.set(data, '993724370105139280');
+  const auth = await oAuth(id, secret);
+  if(!auth){
+    console.log('Spotify api not accept');
+  }
+  else{
+    console.log('Ready!');
+    console.log(client.user?.tag); 
+  }
 });
 
 client.on('messageCreate', async message => {
-  if (message.content.startsWith('/s')) {
-    const trackName = message.content.split('').slice(2).join('');
+  if (message.content.startsWith('!search')) {
+    const trackName = message.content.split('').slice(7).join('');
     searchTrack(trackName)
-    .then((result: any[]) => {
-      const resultString = result.join('\n\n');
-      message.reply(resultString);
+    .then((result: EmbedBuilder[]) => {
+      // const resultString = result.join('\n\n');
+      message.reply({ embeds : result});
     })
     .catch((err) => {
       console.log(err);
       // console.log(err.code);
       // console.log(err.config.url);
-      // message.reply('エラーです！私にはできません！');
+      message.reply('エラーです！私にはできません！');
     });
   }
-
-  // let mention: boolean = false;
-  // if (message.author.bot) return
-  // if (message.content.includes('<@1070400376970428588>')){
-  //   mention = true;
-  // }
-  // if (message.content === '!ping' && mention === true) {
-  //   message.reply('pong!');
-  // }
-  // else if(message.content === 'hello'){
-  //   message.channel.send('World');
-  // }
-  // else if (message.content.startsWith('<@')) {
-  //   message.channel.send('yes');
-  // }
 });
+
+client.on('interactionCreate', async (interaction) => {
+  if(!interaction.isCommand()){
+    return;
+  };
+  if (interaction.commandName === 'search') {
+    // const message = await interaction.fetchReply();
+    // console.log(message);
+  }
+})
 
 process.on('uncaughtException', (err) => {
   console.log(`${err.stack}`);
